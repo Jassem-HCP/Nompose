@@ -3,10 +3,11 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/Jassem-HCP/nompose/internal/detector"
+	"github.com/Jassem-HCP/nompose/internal/generator"
 	"github.com/Jassem-HCP/nompose/internal/interactive"
 	"github.com/Jassem-HCP/nompose/internal/parser"
+	"github.com/spf13/cobra"
 )
 
 var generateCmd = &cobra.Command{
@@ -34,19 +35,19 @@ func init() {
 
 func runGenerate(cmd *cobra.Command, args []string) error {
 	source := args[0]
-	
+
 	fmt.Printf("🔍 Analyzing source: %s\n", source)
-	
+
 	// Detect source type
 	detector := detector.NewDetector()
 	result := detector.DetectSourceType(source)
-	
+
 	if !result.Valid {
 		return fmt.Errorf("❌ %s", result.Error)
 	}
-	
+
 	fmt.Printf("✅ Detected source type: %s\n", result.SourceType)
-	
+
 	// Parse based on source type
 	switch result.SourceType {
 	case "docker-compose":
@@ -58,22 +59,22 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	default:
 		fmt.Printf("🚧 %s parsing coming in next sub-steps...\n", result.SourceType)
 	}
-	
+
 	return nil
 }
 
 func handleDockerCompose(filePath string) error {
 	fmt.Printf("📋 Parsing docker-compose file...\n")
-	
+
 	// Parse with enhanced data preservation
 	parser := parser.NewDockerComposeParser()
 	services, err := parser.Parse(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to parse docker-compose: %w", err)
 	}
-	
+
 	fmt.Printf("✅ Found %d services:\n", len(services))
-	
+
 	// Show enhanced detection summary
 	for i, service := range services {
 		fmt.Printf("   %d. %s (%s)\n", i+1, service.Name, service.ResolvedImage)
@@ -84,31 +85,20 @@ func handleDockerCompose(filePath string) error {
 			fmt.Printf("      Environment: %d variables\n", len(service.Environment))
 		}
 	}
-	
+
 	// Enhanced interactive confirmation
 	confirmer := interactive.NewConfirmer()
 	confirmedServices, err := confirmer.ConfirmServices(services)
 	if err != nil {
 		return fmt.Errorf("failed to confirm services: %w", err)
 	}
-	
-	// Show final summary
-	fmt.Println("✅ Configuration confirmed! Summary:")
-	for i, service := range confirmedServices {
-		fmt.Printf("📦 %d. %s\n", i+1, service.Name)
-		fmt.Printf("   Image: %s\n", service.ResolvedImage)
-		if len(service.ResolvedPorts) > 0 {
-			fmt.Printf("   Ports: %d configured\n", len(service.ResolvedPorts))
-		}
-		fmt.Printf("   Environment: %d variables\n", len(service.Environment))
-		if len(service.Dependencies) > 0 {
-			fmt.Printf("   Dependencies: %v\n", service.Dependencies)
-		}
-		fmt.Println()
+
+	// Generate enhanced Nomad job files
+	generator := generator.NewNomadGenerator(".")
+	if err := generator.GenerateJobs(confirmedServices); err != nil {
+		return fmt.Errorf("failed to generate Nomad jobs: %w", err)
 	}
-	
-	fmt.Println("🚧 Enhanced Nomad job generation coming next...")
-	
+
 	return nil
 }
 
