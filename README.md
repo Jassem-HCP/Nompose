@@ -2,7 +2,7 @@
 
 ## **🎯 Project Overview**
 
-**Nompose** is an intelligent CLI tool that converts Docker Compose configurations into production-ready Nomad job specifications. It bridges the gap between Docker development workflows and Nomad production deployments through smart detection, interactive confirmation, and automated generation.
+**Nompose** is a CLI tool that converts Docker Compose configurations into production-ready Nomad job specifications. It bridges the gap between Docker development workflows and Nomad production deployments through smart detection, interactive confirmation, and automated generation.
 
 ### **Core Value Proposition**
 - **Zero Learning Curve**: Use familiar docker-compose.yml files to deploy on Nomad
